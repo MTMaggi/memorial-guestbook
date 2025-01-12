@@ -83,7 +83,7 @@
     <div class="container">
         <h1>Memorial Guest Book</h1>
         <form id="guestBookForm">
-            <label for="lovedOne">Loved One</label>
+            <label for="lovedOne">Enter Your Name</label>
             <input type="text" id="lovedOne" name="lovedOne" placeholder="Enter your name" required>
 
             <label for="memory">Memory</label>
@@ -100,22 +100,29 @@
     <script>
         const form = document.getElementById('guestBookForm');
         const entriesContainer = document.getElementById('entries');
-        const backendUrl = "https://script.google.com/macros/s/AKfycbyYGcs3iKwkPR6n6TXZorw0BuL-OB0bYihaDF1urafIOI_hYuKdED_9ScxhznjrrV2dwA/exec"; // Replace with your Web App URL
+        const backendUrl = "https://script.google.com/macros/s/AKfycbyYGcs3iKwkPR6n6TXZorw0BuL-OB0bYihaDF1urafIOI_hYuKdED_9ScxhznjrrV2dwA/exec"; // Your Web App URL
 
         async function fetchEntries() {
-            const response = await fetch(backendUrl);
-            const entries = await response.json();
-            entriesContainer.innerHTML = ""; // Clear previous entries
-            entries.reverse().forEach(entry => {
-                const entryDiv = document.createElement('div');
-                entryDiv.classList.add('entry');
-                entryDiv.innerHTML = `
-                    <div class="entry-time">${entry.timestamp}</div>
-                    <div><strong>${entry.lovedOne}</strong></div>
-                    <div>${entry.memory}</div>
-                `;
-                entriesContainer.appendChild(entryDiv);
-            });
+            try {
+                const response = await fetch(backendUrl);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch entries");
+                }
+                const entries = await response.json();
+                entriesContainer.innerHTML = ""; // Clear previous entries
+                entries.reverse().forEach(entry => {
+                    const entryDiv = document.createElement('div');
+                    entryDiv.classList.add('entry');
+                    entryDiv.innerHTML = `
+                        <div class="entry-time">${entry.timestamp}</div>
+                        <div><strong>${entry.lovedOne}</strong></div>
+                        <div>${entry.memory}</div>
+                    `;
+                    entriesContainer.appendChild(entryDiv);
+                });
+            } catch (error) {
+                console.error("Error fetching entries:", error);
+            }
         }
 
         form.addEventListener('submit', async function(event) {
@@ -123,21 +130,26 @@
             const lovedOne = document.getElementById('lovedOne').value;
             const memory = document.getElementById('memory').value;
 
-            const response = await fetch(backendUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ lovedOne, memory }),
-            });
+            try {
+                const response = await fetch(backendUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ lovedOne, memory }),
+                });
 
-            if (response.ok) {
+                if (!response.ok) {
+                    throw new Error("Failed to submit entry");
+                }
+
                 fetchEntries(); // Refresh the entries
                 form.reset();
-            } else {
+            } catch (error) {
+                console.error("Error submitting entry:", error);
                 alert("Failed to submit your entry. Please try again.");
             }
         });
 
-        fetchEntries();
+        fetchEntries(); // Load entries on page load
     </script>
 </body>
 </html>
